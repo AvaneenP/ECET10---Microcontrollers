@@ -1,0 +1,52 @@
+#include <p16f887.inc>
+__CONFIG _FOSC_XT & _WDTE_OFF & _PWRTE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _WRT_OFF & _CP_OFF
+
+    ORG 0
+    GOTO main
+    ORG 4
+    GOTO isr
+
+main:
+   
+    BANKSEL TRISD
+    MOVLW 0xFF
+    MOVWF TRISD ; set PORTD for inputs
+    MOVLW 0x00
+    MOVWF TRISC ; set PORTC for outputs
+    CLRF TRISC
+    BANKSEL PORTC
+    CLRF PORTC
+    CLRW
+   
+    
+loop:
+    BANKSEL PORTD
+    BTFSC PORTD, 0
+    GOTO click
+    GOTO loop
+
+click:
+;    XORWF PORTD, 0 
+;    MOVWF PORTC
+    MOVLW 0xFF
+    SUBWF PORTC, 0
+    BTFSC STATUS, Z
+    GOTO last
+    INCF PORTC
+    GOTO waitforclick
+    
+last:
+    BANKSEL PORTC
+    CLRF PORTC
+    GOTO waitforclick
+    
+waitforclick:
+    BTFSC PORTD, 0
+    GOTO waitforclick
+    GOTO loop
+    
+isr:
+    NOP
+    RETFIE
+
+    END
