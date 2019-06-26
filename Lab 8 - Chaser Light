@@ -1,0 +1,76 @@
+#include <p16f887.inc>
+__CONFIG _FOSC_XT & _WDTE_OFF & _PWRTE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _WRT_OFF & _CP_OFF
+
+    ORG 0
+    GOTO main
+    ORG 4
+    GOTO isr
+    count1 EQU 0x20
+    count2 EQU 0x21
+    count3 EQU 0x22
+main:
+   
+    BANKSEL TRISD
+    MOVLW 0xFF
+    MOVWF TRISD ; set PORTD for inputs
+    MOVLW 0x00
+    MOVWF TRISC ; set PORTC for outputs
+    CLRF TRISC
+    BANKSEL PORTC
+    CLRF PORTC
+    BSF PORTC, 0
+    CLRW
+    
+    
+loop:
+    BANKSEL PORTD
+    BTFSC PORTD, 0
+    GOTO forward
+    GOTO reverse
+
+forward:
+    MOVLW 0xFF
+    MOVWF count1
+    delayLoop1:
+	MOVLW 0xFF
+	MOVWF count2
+	delayLoop2:
+	    MOVLW 0x05
+	    MOVWF count3
+	    delayLoop3:
+		DECFSZ count3
+		GOTO delayLoop3
+	    DECFSZ count2
+	    GOTO delayLoop2
+	DECFSZ count1
+	GOTO delayLoop1
+    RRF PORTC, 1
+    GOTO loop
+
+    
+
+reverse:
+    MOVLW 0xFF
+    MOVWF count1
+    delayLoop4:
+	MOVLW 0xFF
+	MOVWF count2
+	delayLoop5:
+	    MOVLW 0x05
+	    MOVWF count3
+	    delayLoop6:
+		DECFSZ count3
+		GOTO delayLoop6
+	    DECFSZ count2
+	    GOTO delayLoop5
+	DECFSZ count1
+	GOTO delayLoop4
+    RLF PORTC, 1
+    GOTO loop
+ 
+    
+isr:
+    NOP
+    RETFIE
+
+    END
