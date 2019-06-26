@@ -1,0 +1,69 @@
+#include <p16f887.inc>
+__CONFIG _FOSC_XT & _WDTE_OFF & _PWRTE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _WRT_OFF & _CP_OFF
+
+    ORG 0
+    GOTO main
+    ORG 4
+    GOTO isr
+    
+main:
+    BANKSEL ANSELH
+    CLRF ANSELH
+    BANKSEL ANSEL
+    CLRF ANSEL
+    BANKSEL TRISD
+    MOVLW 0xFF
+    MOVWF TRISD ; set PORTD for inputs
+    MOVLW 0x00
+    MOVWF TRISC ; set PORTC for outputs
+    CLRF TRISC
+    ;CLRF TRISA
+    CLRW
+    
+    
+    
+loop:
+    BANKSEL PORTD
+    MOVF PORTD, 0
+    MOVWF 0x20
+    SWAPF 0x20, 0
+    ANDLW 0x0F
+    
+    BCF 0x20, 4
+    BCF 0x20, 5
+    BCF 0x20, 6
+    BCF 0x20, 7
+    SUBWF 0x20, 0
+    GOTO test
+
+test:
+    BTFSC STATUS, Z
+    GOTO equal
+    GOTO notEqual
+
+equal:
+    MOVLW 0x02
+    MOVWF PORTC
+    GOTO loop
+
+notEqual:
+    BTFSC STATUS, C
+    GOTO positive
+    GOTO negative
+    
+positive:
+    MOVLW 0x04
+    MOVWF PORTC
+    GOTO loop
+    
+negative:
+    MOVLW 0x01
+    MOVWF PORTC
+    GOTO loop
+    
+    
+isr:
+    NOP
+    RETFIE
+
+    END
