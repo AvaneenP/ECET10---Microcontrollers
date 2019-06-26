@@ -1,0 +1,113 @@
+#include <p16f887.inc>
+
+    __CONFIG _FOSC_XT & _WDTE_OFF & _PWRTE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _WRT_OFF & _CP_OFF
+
+    ORG 0
+    GOTO main
+    ORG 4
+    GOTO isr
+
+shift3val EQU 0x3B ; mem location
+shift2val EQU 0x3A ; mem location
+sum EQU 0x20
+countreg EQU 0x21 ; mem location
+countreg1 EQU 0x39 ; mem location
+count EQU 0x04 ; enter how many numbers you want to average    
+    
+
+main:
+    CLRW
+    MOVLW D'5'
+    MOVWF 0x30
+
+    MOVLW D'8'
+    MOVWF 0x31
+
+    MOVLW D'2'
+    MOVWF 0x32
+
+    MOVLW D'5'
+    MOVWF 0x33
+
+    MOVLW D'50'
+    MOVWF 0x34
+
+    MOVLW D'60'
+    MOVWF 0x35
+
+    MOVLW D'70'
+    MOVWF 0x36
+
+    MOVLW D'80'
+    MOVWF 0x37
+    
+    BANKSEL TRISC
+    MOVLW 0x00
+    MOVWF TRISC ; set PORTC for outputs
+    MOVLW count
+    BANKSEL countreg
+    MOVWF countreg
+    MOVWF countreg1
+    BANKSEL shift2val
+    MOVLW 0x02
+    MOVWF shift2val
+    BANKSEL shift3val
+    MOVLW 0x03
+    MOVWF shift3val
+    BANKSEL FSR
+    MOVLW 0x30 
+    MOVWF FSR
+    BCF STATUS, C
+    CLRW
+
+loop:
+    BANKSEL INDF
+    ADDWF INDF, 0
+    BANKSEL FSR
+    INCF FSR
+    DECFSZ countreg
+    GOTO loop
+    MOVWF sum
+    ;CLRW
+    ;BANKSEL shift2val
+    ;MOVF shift2val, 0
+    ;BANKSEL PORTC
+    ;MOVWF PORTC
+    BTFSC countreg1, 3
+    GOTO shift3
+    BTFSC countreg1, 2
+    GOTO shift2
+    BTFSC countreg1, 1
+    GOTO shift1
+    NOP
+
+shift1:
+    RRF sum, 0
+    BANKSEL PORTC
+    MOVWF PORTC
+    GOTO main
+
+shift2:
+    RRF sum, 1
+    DECFSZ shift2val
+    GOTO shift2
+    MOVF sum, 0
+    BANKSEL PORTC
+    MOVWF PORTC
+    GOTO main
+
+shift3:
+    RRF sum, 1
+    DECFSZ shift3val
+    GOTO shift3
+    MOVF sum, 0
+    BANKSEL PORTC
+    MOVWF PORTC
+    GOTO main
+    
+   
+isr:
+    NOP
+    RETFIE
+
+    END
